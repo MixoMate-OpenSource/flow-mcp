@@ -1,83 +1,165 @@
 # flow-mcp
 
-Drive **Google Flow** (flow.google.com) from Claude, Codex or any other MCP app — or from a local control
-panel — using the credits already included in your Google AI subscription, not the pay-per-use video API.
+Drive **Google Flow** ([flow.google.com](https://flow.google.com)) directly from **Claude**, **Codex**, **Antigravity**, or any Model Context Protocol (MCP) client — or use the built-in **Flow Studio** control panel — using the credits included in your Google AI subscription (Pro or Ultra) instead of a pay-per-use video API.
 
-It is a small program that runs on your own machine. It opens its own Chrome window, signs in
-as you, and clicks Flow's real buttons. There is no browser extension, no hosted service and no
-account to create.
+`flow-mcp` runs locally on your computer. It drives a dedicated Google Chrome instance via the Chrome DevTools Protocol (CDP), clicks the native Flow interface at human pace, and bypasses bot-detection issues with zero extensions or external proxies.
 
+```text
+┌──────────────────────────────────────────────┐
+│  Claude / Codex / Antigravity / MCP Client   │
+└──────────────────────┬───────────────────────┘
+                       │ stdio (JSON-RPC)
+                       ▼
+┌──────────────────────────────────────────────┐
+│                  flow-mcp                    │
+│   • 17 Native MCP Tools                      │
+│   • Director Continuity Engine (Skill/Prompt)│
+│   • Local Job Queue & Credit Protection      │
+│   • Flow Studio Web Panel (Port 8787)        │
+└──────────────────────┬───────────────────────┘
+                       │ Chrome DevTools Protocol (CDP: 9333)
+                       ▼
+┌──────────────────────────────────────────────┐
+│         Chrome (Dedicated Profile)           │
+│        ──► Google Flow (Real UI)             │
+└──────────────────────────────────────────────┘
 ```
-Claude / Codex ──stdio──> flow-mcp ──Chrome DevTools Protocol──> Chrome (its own profile) ──> Flow
-```
-
-**MCP** = Model Context Protocol, the standard that lets Claude use outside tools.
-New here? [OVERVIEW.md](OVERVIEW.md) explains what it does in plain English, with no code names.
 
 ---
 
-## What you need
+## Key Features
 
-| | |
+- **Credit Protection**: Every generation inspects Flow's live credit quote and automatically aborts if it exceeds your defined credit limit (`max_credits`, default 25).
+- **Free Keyframing**: Generates unlimited free image stills (Nano Banana 2, 0 credits) to lock the visual look before rendering videos.
+- **Shot-to-Shot Continuity**: Supports `chain_previous` (seamless multi-clip continuous takes), `first_frame` + `last_frame` interpolation, and multi-asset reference injection (`reference_images`).
+- **Director Continuity Engine (Packaged Skill & Prompt)**: Enforces real-world biomechanics, character identity vectors (CIV), authentic camera optics (focal lengths, depth of field, 180° vector lock), and speech respiration constraints.
+- **Character Studio**: Creates, edits, and lists persistent characters (`flow_characters`, `flow_character`), usable across scenes as `asset:<name>`.
+- **Narration & Audio Stitching**: Free text-to-speech with Google AI Studio (`flow_narrate` via Gemini) or system voices, combined with local FFmpeg assembling (`flow_assemble`) to join clips, voiceovers, and background music into a single MP4.
+- **Flow Studio Web UI**: Full-featured standalone visual studio at `http://127.0.0.1:8787` for managing characters, shots, transitions, audio, and project media.
+
+---
+
+## Requirements
+
+| Requirement | Details |
 |---|---|
-| **macOS or Windows 10/11** | Developed and tested on macOS. Windows is supported — Chrome, the computer's own voices, the Recycle Bin and the panel launcher all have Windows versions — but it hasn't been run on a real PC yet, so please report anything that breaks |
-| **Node.js 22 or newer** | `node --version` |
-| **Google Chrome** | Any recent version |
-| **A Google AI subscription with Flow** | Pro or Ultra. This is where the credits come from |
-| **FFmpeg** *(optional)* | Mac: `brew install ffmpeg` · Windows: `winget install Gyan.FFmpeg` — needed only to join clips, mix music or record narration |
-| **A Google AI Studio key** *(optional, free)* | Only for the Google narration voices. See below |
+| **Operating System** | macOS or Windows 10/11 |
+| **Node.js** | Node.js 22 or newer (`node --version`) |
+| **Package Manager** | `pnpm` (recommended) or `npm` |
+| **Google Chrome** | Latest stable release |
+| **Google AI Subscription** | Pro or Ultra (supplies Flow generation credits) |
+| **FFmpeg** *(Optional)* | Required for stitching, mixing, or audio assembly (`winget install Gyan.FFmpeg` on Windows, `brew install ffmpeg` on macOS) |
+| **Google AI Studio Key** *(Optional)* | Free key from [Google AI Studio](https://aistudio.google.com/apikey) for Google's native narration voices |
 
-A display must stay awake: the Chrome window is really being driven, so the machine cannot be
-headless or asleep mid-run.
+> **Directory Placement**:
+> - **macOS**: Do not clone into `~/Desktop`, `~/Documents`, or `~/Downloads` due to macOS App Sandbox permissions (`EPERM`). Use `~/flow-mcp` or your home directory.
+> - **Windows**: Avoid folders synced with OneDrive (e.g. cloud-synced Documents or Desktop). Use `C:\Users\<you>\flow-mcp` or a dedicated workspace folder.
 
 ---
 
-## Install
+## Installation & Initial Setup
+
+### 1. Clone & Build
 
 ```bash
-git clone https://github.com/GTAI-1/flow-mcp.git
+git clone https://github.com/MixoMate-OpenSource/flow-mcp.git
 cd flow-mcp
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
-> **Mac: do not put this folder in `~/Desktop`, `~/Documents` or `~/Downloads`.** macOS protects those
-> folders, and apps that launch the server from there can be refused permission to read its own
-> files (`EPERM: operation not permitted`). `~/flow-mcp` or anywhere in your home folder is fine.
->
-> **Windows: keep it out of folders OneDrive syncs** (often Desktop and Documents), where files can be held
-> online-only. `C:\Users\<you>\flow-mcp` is fine.
-
-Then sign in, once:
+### 2. Authenticate Once
 
 ```bash
-npm run login
+pnpm run login
 ```
 
-That opens the dedicated Chrome window. Sign into Google by hand, open (or create) a Flow project,
-and leave the window open. The program never types your password — it only uses the session you
-created. That Chrome profile lives in `~/.flow-mcp/chrome-profile` and is separate from your
-everyday browser.
+This launches a dedicated Chrome instance using an isolated profile stored in `~/.flow-mcp/chrome-profile`:
+1. Sign into your Google Account in the opened Chrome window.
+2. Navigate to [flow.google.com](https://flow.google.com) and create or open a project.
+3. Keep the Chrome window open (or let `flow-mcp` manage it). `flow-mcp` never accesses or handles your credentials directly.
 
 ---
 
-## Connect it to Claude or Codex
+## How to Use
 
-**Claude Code**
+### 1. With Antigravity (Google DeepMind IDE & CLI)
+
+`flow-mcp` includes a complete `.agents/` plugin bundle out of the box with zero manual JSON configuration required.
+
+#### Automatic Workspace Discovery
+When you open this repository in Antigravity:
+1. The **`flow-mcp` plugin** located at `.agents/plugins/flow-mcp` is discovered automatically.
+2. The **Director Skill** (`director`) is automatically registered to guide scene construction and prevent AI drift.
+3. The **MCP Server** (`dist/index.js`) is launched automatically through `.agents/plugins/flow-mcp/mcp_config.json`.
+
+#### Global Configuration (All Projects)
+To use `flow-mcp` and the Director skill in any Antigravity workspace, add it to your global config (`~/.gemini/config/mcp_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "flow-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/flow-mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+Copy the Director skill into your global skills folder if you want it globally available:
+```bash
+# Windows
+mkdir -p "$env:USERPROFILE\.gemini\config\skills\director"
+Copy-Item -Recurse ".agents\plugins\flow-mcp\skills\director\*" "$env:USERPROFILE\.gemini\config\skills\director"
+
+# macOS / Linux
+mkdir -p ~/.gemini/config/skills/director
+cp -r .agents/plugins/flow-mcp/skills/director/* ~/.gemini/config/skills/director/
+```
+
+**In Chat with Antigravity:**
+> *"Check my Flow session and list my project characters."*  
+> *"Direct a 3-scene cyberpunk alley chase using the Director skill rules. Lock our character Pip, keep camera on an 85mm lens with handheld sway, and generate the shots with chaining."*
+
+---
+
+### 2. With Claude
+
+#### Claude Desktop
+Add `flow-mcp` to your `claude_desktop_config.json`:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "flow": {
+      "command": "node",
+      "args": ["/absolute/path/to/flow-mcp/dist/index.js"]
+    }
+  }
+}
+```
+*(On Windows, escape backslashes: `"C:\\Users\\you\\flow-mcp\\dist\\index.js"`).*
+
+#### Claude Code (CLI)
+Register the server in Claude Code:
 
 ```bash
 claude mcp add flow -- node /absolute/path/to/flow-mcp/dist/index.js
 ```
 
-**Claude Desktop** — add to `claude_desktop_config.json` (Mac: `~/Library/Application Support/Claude/`, Windows:
-`%APPDATA%\Claude\`). On Windows, write the path with doubled backslashes, like
-`"C:\\Users\\you\\flow-mcp\\dist\\index.js"`:
+**Using the Director Prompt in Claude:**
+Claude will discover the native MCP prompt `flow_director`:
+> Select `/flow_director` from the prompt menu or ask:  
+> *"Use the flow_director prompt to format a cinematic sequence for a detective entering a neon-lit diner."*
 
-```json
-{ "mcpServers": { "flow": { "command": "node", "args": ["/absolute/path/to/flow-mcp/dist/index.js"] } } }
-```
+---
 
-**Codex** — add to `~/.codex/config.toml` (on Windows, `%USERPROFILE%\.codex\config.toml`):
+### 3. With Codex
+
+Add `flow-mcp` to your Codex configuration file (`~/.codex/config.toml` or `%USERPROFILE%\.codex\config.toml`):
 
 ```toml
 [mcp_servers.flow]
@@ -85,149 +167,143 @@ command = "node"
 args = ["/absolute/path/to/flow-mcp/dist/index.js"]
 ```
 
-Or run `codex mcp add flow -- node /absolute/path/to/flow-mcp/dist/index.js`. No timeout setting is needed:
-Codex, like most MCP apps, gives up on a tool call after 60 seconds, so any call that runs longer than about
-45 seconds (creating a character, a 1080p download) answers with a task id instead and keeps working, and
-`flow_wait` collects the result.
-
-**Other MCP apps** (Cursor, VS Code and others) take the same command and arguments in their own MCP
-settings. ChatGPT in the browser or the ChatGPT app can't use it: its connectors only reach servers on
-the internet, and this tool has to run on your own computer to drive your Chrome window.
-
-Developed and tested with Claude. Codex speaks the same protocol, so it should work the same way, but
-it hasn't been tried yet — please report how it goes.
-
-Restart the app, then ask it: *"check my Flow session"*. You should get your plan and credit balance
-back. Everything after that is plain English — you never type tool names.
-
----
-
-## Your first film
-
-Nothing below costs a credit until step 4, and the assistant asks before spending.
-
-1. **Check the session.** *"Check my Flow session."* — confirms sign-in, plan and credits.
-2. **Make a character.** *"Create a character called Pip, a small lamplighter in a flat cartoon style."*
-   Flow draws the portrait. Free.
-3. **Draw the key frames.** *"Draw three stills with Pip: a dark rooftop, him lighting a lamp, the
-   whole hillside glowing. Match each one to the last."* Free — stills cost nothing, so get the look
-   right here before spending.
-4. **Shoot it.** *"Turn those into three 10-second shots, each starting where the last one ended,
-   720p, no more than 15 credits each."* This spends credits. The price is read from Flow's own
-   quote first and the scene is skipped if it is over your cap.
-5. **Narrate it.** *"Record this line with a warm documentary voice."* Free, any length.
-6. **Cut it.** *"Join the three shots under the narration, don't freeze the last frame."*
-   The finished file lands in `~/flow-mcp-out/<project>/`.
-
----
-
-## The control panel
-
-The same features, without an AI assistant in the loop:
-
+Or add it via CLI:
 ```bash
-npm run studio     # then open http://127.0.0.1:8787
+codex mcp add flow -- node /absolute/path/to/flow-mcp/dist/index.js
 ```
 
-or double-click **Flow Studio.command** (Mac) or **Flow Studio.cmd** (Windows).
-
-Seven tabs, in the order you would use them:
-
-- **Cast** — reusable characters: create, edit in place, or build one from a picture.
-- **Frames** — free stills, with *match previous frame* to keep a set on-model.
-- **Shots** — paid clips, with first/last frames, chaining, a live credit estimate, and a card that
-  continues a finished clip from its own last frame.
-- **Voice** — free narration in Google's voices or your computer's own. Your saved narrations are listed
-  here to play or delete, and there's a field for your Google AI Studio key (checked with Google, stored
-  only on your computer — never paste it into a chat).
-- **Restyle** — change a clip you already have.
-- **Cut** — join any videos into one film, in the order you pick: upload one, or choose from films you've
-  already made. Add a narration (from your saved ones or an upload) and music, and turn the clips' own
-  sound down so the narration sits on top.
-- **Library** — everything in your Flow project: download it again for free (a scene comes down as one
-  finished film, not loose clips), or move it to Flow's Trash.
-
-A progress monitor and a gallery of your saved work sit alongside — the gallery shows stills or clips
-on the tabs that use them. On a wide screen, each side scrolls on its own. Two kinds of delete, clearly
-labelled: **Move to the Mac's Trash / Recycle Bin** removes a file from your computer; **Move to
-Flow's Trash** removes it from your Flow project only. Both can be undone.
-
-The panel ships with the repo but is not started for you — run `npm run studio` when you want it.
-Opening `studio/index.html` as a plain file does nothing; the page needs the server behind it, and
-says so in red if you try.
-
-Claude's own process serves the same panel while it runs. Whichever process starts first owns the
-Chrome tab and the job queue; the other talks to it over a local API, so Claude and the panel always
-agree on what is running. That API listens on 127.0.0.1 only and needs a per-run token
-(`~/.flow-mcp/token`).
+> **Note on Timeouts:** Codex defaults to a 60-second MCP tool execution timeout. `flow-mcp` has built-in patience management: operations taking longer than 45 seconds (such as generating characters or downloading high-res renders) immediately return an active task ID, continuing work in the background. Codex will poll `flow_wait` until finished.
 
 ---
 
-## Tools
+### 4. With Cursor, Zed, & Other MCP Clients
 
-| Tool | Purpose |
-|---|---|
-| `flow_status` | Session state (signed in, project open, plan, credits left), queue, pacing, prompt playbook |
-| `flow_generate` | Queue scenes: prompt, image or video, model, aspect, duration, resolution, variants, first/last frame, reference images, `max_credits` cap |
-| `flow_wait` | Wait for jobs, or for the task id of a slow call; returns file paths and results. Answers within about 40 s, so call again until `finished` is true |
-| `flow_cancel` | Cancel a job that has not started |
-| `flow_retry` | Re-queue failed jobs with the same settings and file names (a failed tile is first retried inside Flow with its own free Retry button: `retries`, default 1) |
-| `flow_assets` | List images and videos already in the Flow project (usable as `asset:<title>`) |
-| `flow_download` | Download existing project media without regenerating — free, including the 1080p / 2K upscale. A scene comes down as one stitched film |
-| `flow_trash` | Move an image, video or scene in the Flow project to Flow's Trash, where it can be restored. Exact title only; refuses if two items share it; never deletes permanently |
-| `flow_agent_images` | Fast image batch: hands up to 50 scenes to Flow's own Agent mode, rendered in parallel (20 images in ~204 s), 0 credits. Each image is matched back to its scene by its stored prompt, so file numbers are right in any finish order. Scenes the agent drops are re-asked of it (up to 2 rounds), then re-run one by one |
-| `flow_edit` | Video-to-video edit of a clip already in the project (relight, weather, remove objects). Flow shows no quote first; about 20 credits for a 4 s clip |
-| `flow_continue` | Start a clip from the last frame of an existing one **with a character or your avatar still attached** — the composer allows a start frame or attached characters, never both, so this drives Flow's agent mode, which does both. No quote beforehand |
-| `flow_character` | Create a reusable character from a description (Flow draws the portrait) or an image, with a personality and a stock voice; use it as `asset:<name>` |
-| `flow_character_edit` | Restyle an existing character in place (free) and save the new portrait; name, personality and voice are kept, so every scene referencing it updates. Pass `look` with the updated description; with only a name it re-saves the current portrait |
-| `flow_characters` | List the project's characters |
-| `flow_techniques` | 39 film-technique prompt presets (camera moves, product shots, transitions, image commands); pass an id as a scene's `technique` |
-| `flow_narrate` | Free narration audio, any length: `gemini` (Google AI Studio text-to-speech — the same voices Flow has, plus a `style` note) or `mac` (a voice installed on this computer, no key needed) |
-| `flow_voices` | Narrator voices available, and whether a Google key is set up |
-| `flow_assemble` | Join clips into one MP4 — a project's clips, or any you list, in order — with optional music and voiceover, and separate volume for the clips' own sound (local FFmpeg, no credits) |
-
-**Continuity between shots:** `chain_previous` (this clip starts on the last frame of the previous
-one), `first_frame` + `last_frame` (animate between two stills you chose), `reference_images` (keep a
-character or product consistent). Flow's *composer* takes either frames or references, never both — so
-when you need a start frame **and** a character locked together, use `flow_continue`, which goes through
-Flow's agent mode and does both.
-
-Output lands in `~/flow-mcp-out/<project>/scene-NN.ext`.
-
-### Narration with Google's voices (optional)
-
-`flow_narrate` with `engine: "mac"` uses your computer's own voices and works out of the box — macOS voices on a
-Mac, the built-in speech voices on Windows. For Google's voices — the same ones Flow offers — get a free key from
-[Google AI Studio](https://aistudio.google.com/apikey) and paste it into **Flow Studio → Voice → Google AI Studio
-key → Save key**. It's checked with Google before it's saved, and stored only on your computer. Or set
-`GEMINI_API_KEY`. Either way, never paste the key into a chat — it would end up in the conversation history.
+For any editor supporting standard stdio MCP:
+- **Command**: `node`
+- **Args**: `["/absolute/path/to/flow-mcp/dist/index.js"]`
 
 ---
 
-## Behaviour and settings
+## The Locked-State Director Skill
 
-- One generation at a time, with a random 25–70 second pause between them. The page carries an
-  invisible reCAPTCHA; this drives the real interface at human pace and does nothing to evade it.
-- Before each generation the server reads Flow's own credit quote and skips the scene if it exceeds
-  `max_credits` (default 25).
-- Environment variables can be configured using a `.env` file (copy `.env.example` to `.env`):
-  `GEMINI_API_KEY`, `FLOW_MCP_PORT` (8787), `FLOW_MCP_OUTPUT`, `FLOW_MCP_HOME`,
-  `FLOW_MCP_CDP_PORT` (9333), `FLOW_MCP_CHROME`, `FLOW_MCP_PAUSE_MIN_S`,
-  `FLOW_MCP_PAUSE_MAX_S`, `FLOW_MCP_PATIENCE_MS`, `FLOW_MCP_FFMPEG`, `FLOW_MCP_FFPROBE`.
+When generating video sequences, AI models frequently suffer from **AI drift**: character faces morph, clothes change between cuts, impossible physics occur, and camera angles jump erratically.
 
-## If something goes wrong
-
-| Symptom | Cause |
-|---|---|
-| Mac: the server will not start, `EPERM: operation not permitted` | The folder is in a macOS-protected location. Move it out of `~/Desktop`, `~/Documents` or `~/Downloads` and update the path in your Claude config |
-| *"Not signed in"* or *"no project open"* | Run `npm run login`, sign in, open a Flow project, leave the window open |
-| A clip generated but no file arrived | The media is still in Flow. `flow_download` pulls it back for nothing — never re-generate and pay twice |
-| Everything times out | The Chrome window was closed, or the machine slept. Reopen it with `npm run login` |
+The **Director Engine** (`director`) enforces strict continuity laws:
+1. **Master Anchor Document Layer**: Compiles a persistent **Character Identity Vector (CIV)** (height, build, clothing layers, scars) and **Art & Graphical Manifest (AGM)** (lens sensor, noise grain) before generation.
+2. **Biomechanical & Physical State Machine**: Enforces human kinesthetics. Forbids simultaneous speaking and swallowing; enforces weight transfer and deceleration; inserts autonomic breathing and ocular saccades.
+3. **Voice & Audio Architecture**: Injects authentic respiratory pauses (`[sharp breath]`, `[0.3s cognitive pause]`) and acoustic occlusion (muffled rooms, distance drop-off).
+4. **Authentic Lens Optics**: Forbids impossible floating CGI pans. Requires real-world focal lengths (24mm wide, 50mm normal, 85mm portrait), aperture depth-of-field, and strict enforcement of the **180-Degree Vector Rule**.
+5. **Toolchain Integration**: Directly maps planned shots into `flow_techniques`, `flow_characters`, and `flow_generate` with `chain_previous: true`.
 
 ---
 
-## Licence and risk
+## Standalone Web Control Panel: Flow Studio
 
-This automates Flow's web interface. It can break whenever Google changes that interface, and
-automated use may be against Google's terms of service. Use it on your own account, at your own
-risk.
+Prefer a graphical user interface without an AI chat assistant? Run the included local web application:
+
+```bash
+pnpm run studio
+```
+Or double-click `Flow Studio.cmd` (Windows) / `Flow Studio.command` (macOS). Then navigate to:
+```
+http://127.0.0.1:8787
+```
+
+Flow Studio provides seven dedicated workspaces:
+- **Cast**: Create, preview, and edit reusable character assets.
+- **Frames**: Render free stills (Nano Banana 2) with "Match previous frame" continuity.
+- **Shots**: Render video clips with duration/resolution controls, live credit quotes, and last-frame continuation.
+- **Voice**: Record voiceovers using Google AI Studio or system voices, with speech speed and style modulation.
+- **Restyle**: Video-to-video editing (change weather, relight, or modify scene elements).
+- **Cut**: Multi-track video stitching with voiceover mix, background music loops, and custom volume levels.
+- **Library**: Browse, download upscaled renders, or organize Flow project media.
+
+---
+
+## MCP Tools Reference
+
+| Tool | Type | Description |
+|---|---|---|
+| `flow_status` | Read | Inspects Flow connection, active project, account plan, credits remaining, and prompt playbook. |
+| `flow_generate` | Write | Submits generation jobs: text-to-video, image-to-video, aspect ratios, durations, resolutions, variants, and `chain_previous`. |
+| `flow_wait` | Read | Polls asynchronous generation jobs or long-running tasks until finished. |
+| `flow_cancel` | Write | Cancels a queued job before it starts processing. |
+| `flow_retry` | Write | Retries failed scene renders using identical settings. |
+| `flow_assets` | Read | Lists images, videos, and media items currently in the active project. |
+| `flow_download` | Write | Downloads project media locally (including free 1080p / 2K upscales) without re-spending credits. |
+| `flow_trash` | Write | Moves a media item to Flow's recoverable Trash folder. |
+| `flow_agent_images` | Write | High-throughput batch generator: renders up to 50 images in parallel using Flow's Agent mode (0 credits). |
+| `flow_edit` | Write | Video-to-video editing on an existing clip (relighting, atmosphere, object adjustments). |
+| `flow_continue` | Write | Extends a finished video from its last frame while keeping attached character identities locked. |
+| `flow_character` | Write | Generates a persistent, reusable character portrait from description or image. |
+| `flow_character_edit`| Write | Modifies or restyles an existing character's portrait while preserving identity. |
+| `flow_characters` | Read | Lists all reusable characters (`asset:<name>`) in the active project. |
+| `flow_techniques` | Read | Lists 39 cinematography and prompt technique presets (dolly zoom, crash zoom, FPV drone, hero rotation, etc.). |
+| `flow_narrate` | Write | Generates narration audio files using Google Gemini TTS or native OS voices. |
+| `flow_voices` | Read | Lists all available speech voices and verifies Google AI Studio API key configuration. |
+| `flow_assemble` | Write | Stitches video scenes, background audio, and narration into an MP4 using local FFmpeg. |
+
+### MCP Prompts & Resources
+
+| Identifier | Type | Description |
+|---|---|---|
+| `flow_director` | Prompt | MCP prompt template applying the Locked-State Director engine to any story or scene concept. |
+| `flow://skills/director` | Resource | Read-only MCP resource containing the full Director engine system specification. |
+
+---
+
+## Workflow Recipes
+
+### 1. Zero-Cost Scene Exploration
+1. Check credits and status: `flow_status`
+2. Create your protagonist: `flow_character` with name and visual traits.
+3. Generate multiple scene stills using free images (Nano Banana 2, 0 credits): `flow_generate` with `type: "image"`.
+4. Review image outputs in `~/flow-mcp-out/<project>/`.
+
+### 2. Seamless Continuous Sequence
+1. Submit a multi-scene batch to `flow_generate`:
+   - Scene 1: Establishes character and starting action.
+   - Scene 2: Sets `chain_previous: true` (begins exactly on the last frame of Scene 1).
+   - Scene 3: Sets `chain_previous: true` (continues action without jump-cuts).
+2. Call `flow_wait` until finished.
+3. Record narration: `flow_narrate` with voice ID and script lines.
+4. Assemble into a single video: `flow_assemble` with clips in sequence, voiceover, and background music.
+
+---
+
+## Configuration (`.env`)
+
+Copy `.env.example` to `.env` to customize settings:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `FLOW_MCP_PORT` | `8787` | Local HTTP API and Flow Studio UI port |
+| `FLOW_MCP_CDP_PORT` | `9333` | Chrome DevTools Protocol debugging port |
+| `FLOW_MCP_OUTPUT` | `~/flow-mcp-out` | Local directory for downloaded media and assembled videos |
+| `FLOW_MCP_HOME` | `~/.flow-mcp` | Directory for Chrome profile, auth tokens, and session data |
+| `FLOW_MCP_PAUSE_MIN_S` | `25` | Minimum pause between generation requests (anti-throttling) |
+| `FLOW_MCP_PAUSE_MAX_S` | `70` | Maximum pause between generation requests |
+| `FLOW_MCP_PATIENCE_MS` | `45000` | Max duration a tool call blocks before returning a task ID |
+| `GEMINI_API_KEY` | - | Optional Google AI Studio key for Google narration voices |
+
+---
+
+## Troubleshooting
+
+| Issue | Cause | Solution |
+|---|---|---|
+| *"Not signed in"* or *"no project open"* | Dedicated Chrome instance is closed or unauthenticated. | Run `pnpm run login`, sign in, open a Flow project, and leave Chrome running. |
+| `EPERM: operation not permitted` (macOS) | Cloned inside protected folder (`Desktop`, `Documents`). | Move the project to `~/flow-mcp` and re-link your MCP config. |
+| Request timed out in client | Operation took longer than client's tool timeout limit. | `flow-mcp` automatically converts calls >45s into background tasks. Run `flow_wait` with the task ID. |
+| Clip rendered in Flow but file not saved locally | Network interruption or timeout before download. | Call `flow_download` with the media title — Flow retains completed renders for free re-download. |
+| Video assembly fails | FFmpeg is not found in system `PATH`. | Install FFmpeg (`winget install Gyan.FFmpeg` on Windows, `brew install ffmpeg` on macOS) or set `FLOW_MCP_FFMPEG` in `.env`. |
+
+---
+
+## License & Disclaimer
+
+This project automates the web interface of Google Flow for personal convenience using your own existing subscription credits. It is not affiliated with, endorsed by, or sponsored by Google. Use responsibly and in accordance with applicable platform terms.
