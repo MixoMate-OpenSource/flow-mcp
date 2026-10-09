@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "./env.js";
 // One-time setup: opens the dedicated Chrome profile on Flow so the user can sign in by hand.
 import { getFlowPage, PROFILE_DIR } from "./chrome.js";
 

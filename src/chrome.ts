@@ -1,3 +1,4 @@
+import "./env.js";
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";

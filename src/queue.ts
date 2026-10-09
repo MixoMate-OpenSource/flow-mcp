@@ -1,3 +1,4 @@
+import "./env.js";
 import { randomUUID } from "node:crypto";
 
 export type JobStatus = "queued" | "running" | "done" | "failed" | "cancelled";

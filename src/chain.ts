@@ -1,3 +1,4 @@
+import "./env.js";
 import { execFile } from "node:child_process";
 import { FFMPEG_HINT } from "./platform.js";
 import { promisify } from "node:util";

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "./env.js";
 // Standalone Studio: runs the panel without Claude. If Claude's MCP process already serves it, just opens that.
 import { LocalCore } from "./core.js";
 import { PORT, startServer } from "./server.js";

@@ -210,9 +210,10 @@ key → Save key**. It's checked with Google before it's saved, and stored only 
   invisible reCAPTCHA; this drives the real interface at human pace and does nothing to evade it.
 - Before each generation the server reads Flow's own credit quote and skips the scene if it exceeds
   `max_credits` (default 25).
-- Environment variables: `GEMINI_API_KEY`, `FLOW_MCP_PORT` (8787), `FLOW_MCP_OUTPUT`,
-  `FLOW_MCP_HOME`, `FLOW_MCP_CDP_PORT` (9333), `FLOW_MCP_CHROME`, `FLOW_MCP_PAUSE_MIN_S`,
-  `FLOW_MCP_PAUSE_MAX_S`.
+- Environment variables can be configured using a `.env` file (copy `.env.example` to `.env`):
+  `GEMINI_API_KEY`, `FLOW_MCP_PORT` (8787), `FLOW_MCP_OUTPUT`, `FLOW_MCP_HOME`,
+  `FLOW_MCP_CDP_PORT` (9333), `FLOW_MCP_CHROME`, `FLOW_MCP_PAUSE_MIN_S`,
+  `FLOW_MCP_PAUSE_MAX_S`, `FLOW_MCP_PATIENCE_MS`, `FLOW_MCP_FFMPEG`, `FLOW_MCP_FFPROBE`.
 
 ## If something goes wrong
 

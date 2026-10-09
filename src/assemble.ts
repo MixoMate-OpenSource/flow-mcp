@@ -1,3 +1,4 @@
+import "./env.js";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
