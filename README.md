@@ -245,10 +245,82 @@ Flow Studio provides seven dedicated workspaces:
 
 ### MCP Prompts & Resources
 
-| Identifier | Type | Description |
-|---|---|---|
-| `flow_director` | Prompt | MCP prompt template applying the Locked-State Director engine to any story or scene concept. |
-| `flow://skills/director` | Resource | Read-only MCP resource containing the full Director engine system specification. |
+In addition to 17 tools, `flow-mcp` exposes native MCP Prompts and Resources to provide zero-drift cinematic directing rules directly to LLM clients.
+
+| Identifier | Type | Name | Description |
+|---|---|---|---|
+| `flow_director` | Prompt | Locked-State Cinematic Director | Prompt template injecting the Director continuity engine, CIV spec, and camera rules for any story concept. |
+| `flow://skills/director` | Resource | Locked-State Cinematic Director Skill | Read-only markdown resource containing the complete Director system specification and biomechanical constraints. |
+
+#### Example 1: Using the `flow_director` Prompt any where
+`mcp:flow-mcp:flow_director` generate 20sec short story video animated style teaching a life lesson
+
+
+#### Example 2: Using the `flow_director` Prompt
+
+The `flow_director` prompt formats a complete cinematic pre-production brief and scene breakdown using Flow's locked-state continuity rules.
+
+* **In Claude Desktop / Claude Code / MCP Prompt Menu**:
+  Select `/flow_director` from the slash command menu:
+  ```text
+  /flow_director concept="A lone astronaut repairing an orbital solar array during an unexpected solar flare"
+  ```
+
+* **In Natural Language (Antigravity, Cursor, Claude, Codex)**:
+  > *"Execute the `flow_director` prompt with concept: 'Detective Maya interrogates a suspect inside a dimly-lit retro diner at 2 AM'."*
+
+* **Direct MCP JSON-RPC**:
+  ```json
+  {
+    "method": "prompts/get",
+    "params": {
+      "name": "flow_director",
+      "arguments": {
+        "concept": "Cyberpunk courier running across wet rooftops with a glowing datapad"
+      }
+    }
+  }
+  ```
+
+* **Output Result**:
+  The LLM receives the full Director engine prompt and returns:
+  1. **Character Identity Vector (CIV)** (height, hair, clothing, signature props).
+  2. **Art & Graphical Manifest (AGM)** (focal length, depth of field, color grading).
+  3. **Shot-by-Shot Prompts** formatted ready for `flow_generate` with `chain_previous` and camera techniques.
+
+---
+
+#### Example 3: Using the `flow://skills/director` Resource
+
+The `flow://skills/director` resource exposes the locked-state continuity rulebook as a dynamic context document without requiring filesystem copies.
+
+* **In Natural Language Prompting**:
+  > *"Read the MCP resource `flow://skills/director` and review our character descriptions before we begin generating video shots."*
+
+* **Attaching Context in Supporting MCP Clients**:
+  Use the client's resource picker or reference syntax:
+  ```text
+  @flow://skills/director
+  Based on the biomechanical and camera rules in this resource, critique and refine the prompt for Scene 3.
+  ```
+
+* **Direct MCP JSON-RPC**:
+  ```json
+  {
+    "method": "resources/read",
+    "params": {
+      "uri": "flow://skills/director"
+    }
+  }
+  ```
+
+* **Interactive Testing via MCP Inspector**:
+  Launch the official MCP Inspector to test prompts and inspect resources visually:
+  ```bash
+  npx @modelcontextprotocol/inspector node dist/index.js
+  ```
+  Open the web interface, switch to the **Resources** tab, and click `flow://skills/director` to inspect the live markdown text, or switch to the **Prompts** tab to test `flow_director` with sample parameters.
+
 
 ---
 

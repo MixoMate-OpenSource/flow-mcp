@@ -133,8 +133,13 @@ When executing this director skill with the `flow-mcp` server:
    - For multi-scene continuous takes, pass scenes in batch to `flow_generate` with `chain_previous: true` to prevent jump-cuts between clips.
    - Use `flow_status` and `flow_wait` to monitor generation without re-triggering.
 
-4. **Audio & Assembly**:
-   - Generate natural voiceovers with respiratory markers using `flow_narrate` (selecting voices via `flow_voices`).
-   - Download finished clips using `flow_download`.
-   - Assemble the final video sequence with voiceover and background sound using `flow_assemble`.
+4. **Audio Architecture (Selectable Mode)**:
+   - **Mode A: Flow Native Audio (Flow Synthesis)**:
+     - Direct Flow to generate lip-synced character speech, foley, and ambient acoustic cues in-video by injecting the dialogue directly into the scene prompt:
+       `Sound: [Character] says "[Dialogue]" with [ambient sound effects].`
+     - When stitching with `flow_assemble`, omit the external `voiceover` parameter and set `clip_volume: 1.0` to preserve Flow's native audio at full fidelity.
+   - **Mode B: External TTS Voiceover (Studio Narration)**:
+     - Record clean, high-clarity standalone dialogue stems with `flow_narrate` (Gemini or native OS voices).
+     - Mix the voiceover over the clips using `flow_assemble` with `clip_volume: 0.3` so speech clearly leads over background sound.
+
 

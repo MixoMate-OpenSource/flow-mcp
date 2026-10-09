@@ -91,8 +91,18 @@ Format every scene using this structure:
 3. Identity Trace: Strict clothing and feature adherence to Master Anchor Document.
 
 ------------------------------
+------------------------------
 ## Part 5: Flow MCP Toolchain Integration
 1. Character Locking: Use 'flow_characters' or 'flow_character', reference as 'asset:<name>'.
 2. Camera Moves: Use 'flow_techniques' to map lens kinematics to Flow preset IDs.
 3. Scene Chaining: Submit scenes to 'flow_generate' with 'chain_previous: true' or 'first_frame'/'last_frame'.
-4. Voice & Assembly: Record speech with 'flow_narrate' and assemble final cut with 'flow_assemble'.`;
+4. Audio Architecture (Selectable Mode):
+   • Mode A: Flow Native Audio (Flow Synthesis)
+     - Embed spoken lines in quotes directly into the generation prompt:
+       e.g., 'Sound: Koji speaks with frustration: "Not again... it keeps tearing!", ambient heavy rain.'
+     - Flow synthesizes lip sync and in-video audio naturally.
+     - Assembled with 'flow_assemble' keeping native clip sound at full volume ('clip_volume: 1.0') without external voiceover.
+   • Mode B: External TTS Voiceover (Studio Narration)
+     - Record crisp standalone narration tracks with 'flow_narrate' (Gemini or system voices).
+     - Assembled with 'flow_assemble' with 'voiceover' attached and 'clip_volume: 0.3' so speech sits cleanly on top.`;
+

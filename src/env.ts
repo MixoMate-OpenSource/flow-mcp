@@ -33,7 +33,7 @@ for (const candidate of candidatePaths) {
   const normalized = candidate.toLowerCase();
   if (!normalizedSeen.has(normalized) && existsSync(candidate)) {
     normalizedSeen.add(normalized);
-    dotenv.config({ path: candidate });
+    dotenv.config({ path: candidate, quiet: true });
     loadedFiles.add(candidate);
   }
 }
