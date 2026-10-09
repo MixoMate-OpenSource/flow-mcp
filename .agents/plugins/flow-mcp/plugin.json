@@ -1,0 +1,5 @@
+{
+  "name": "flow-mcp",
+  "description": "Google Flow MCP server bundled with the Locked-State Cinematic Director & Continuity Skill",
+  "version": "0.2.0"
+}

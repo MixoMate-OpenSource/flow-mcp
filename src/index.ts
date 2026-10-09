@@ -3,7 +3,9 @@ import "./env.js";
 import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
 import { LocalCore, shapes, type Core } from "./core.js";
+import { DIRECTOR_SKILL_TEXT } from "./director.js";
 import { PLAYBOOK } from "./playbook.js";
 import { RemoteCore } from "./remote.js";
 import { PORT, startServer } from "./server.js";
@@ -296,4 +298,47 @@ server.registerTool(
   (args) => reply(patient("flow_assemble", core.assemble(args))),
 );
 
+server.registerResource(
+  "flow_director_skill",
+  "flow://skills/director",
+  {
+    title: "Locked-State Cinematic Director Skill",
+    description: "System skill rules and directives for locked-state continuity and biomechanical constraints in Google Flow.",
+    mimeType: "text/markdown",
+  },
+  async (uri) => ({
+    contents: [
+      {
+        uri: uri.href,
+        mimeType: "text/markdown",
+        text: DIRECTOR_SKILL_TEXT,
+      },
+    ],
+  }),
+);
+
+server.registerPrompt(
+  "flow_director",
+  {
+    title: "Locked-State Cinematic Director",
+    description:
+      "Directs cinematic, glitch-free scene-by-scene script and prompt generation for Flow with strict continuity, biomechanics, camera optics, and organic audio rules.",
+    argsSchema: {
+      concept: z.string().optional().describe("Story, character, or scene concept to direct"),
+    },
+  },
+  async ({ concept }) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `${DIRECTOR_SKILL_TEXT}\n\n${concept ? `Target Concept / Story Request:\n${concept}` : "Please prepare the Master Anchor Document and direct the scenes following this specification."}`,
+        },
+      },
+    ],
+  }),
+);
+
 await server.connect(new StdioServerTransport());
+

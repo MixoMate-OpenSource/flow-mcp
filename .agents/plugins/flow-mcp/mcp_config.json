@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "flow-mcp": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {}
+    }
+  }
+}
